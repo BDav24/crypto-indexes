@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <title>Crypto indexes</title>
+</head>
+
+<body>
+  <div id="app">
+    <h1>Crypto indexes</h1>
+    <p>BTC: <input :value="btcIndex" /></p>
+    <p>ALTS: <input :value="altIndex" /></p>
+    <p>ALTS/USD: <input :value="`(${altIndex})/${btcPrice}`" /></p>
+  </div>
+
+  <script>
+    const btcExchanges = [
+      'BITSTAMP:BTCUSD',
+      'KRAKEN:XBTEUR*FX:EURUSD',
+      'COINBASE:BTCUSD',
+      'BITFINEX:BTCUSD',
+      'BINANCE:BTCUSDT'
+    ]
+    new Vue({
+      el: '#app',
+      data: {
+        btcPrice: btcExchanges[0],
+        btcIndex: `(${btcExchanges.join('+')})/${btcExchanges.length}`,
+        altIndex: 'Loading...'
+      },
+      async mounted() {
+        const query = parseQueryString(location.search.substring(1))
+        const { data } = await getJson('https://api.coinmarketcap.com/v2/ticker/', {
+          sort: 'rank',
+          convert: 'BTC',
+          structure: 'array'
+        })
+        const alts = data
+          .filter(({ symbol }) => !['BTC', 'USDT'].includes(symbol))
+          .slice(query.from || 0, query.to || Infinity)
+        this.altIndex = alts
+          .map(({ symbol, quotes: { BTC: { price } } }) => `${getSymbol(symbol)}BTC*${round(1 / price, 1)}`)
+          .join('+')
+      }
+    })
+
+    function getSymbol(symbol) {
+      switch (symbol) {
+        case 'MIOTA':
+          return 'IOTA'
+        default:
+          return symbol
+      }
+    }
+
+    async function getJson(url, params) {
+      const response = await fetch(`${url}?${toQueryString(params)}`)
+      const json = await response.json()
+      return json
+    }
+
+    function toQueryString(params) {
+      return Object.keys(params)
+        .map(param => `${param}=${encodeURIComponent(params[param])}`)
+        .join('&')
+    }
+
+    function parseQueryString(queryString) {
+      return queryString.split('&').reduce((params, paramString) => ({
+        ...params,
+        [paramString.split('=')[0]]: paramString.split('=').slice(1).join('')
+      }), {})
+    }
+
+    function round(num, pow) {
+      return Math.round(num * Math.pow(10, pow)) / Math.pow(10, pow)
+    }
+  </script>
+
+  <style>
+    input {
+      width: 100%;
+    }
+  </style>
+</body>
+
+</html>
