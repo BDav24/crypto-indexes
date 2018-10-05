@@ -7,5 +7,5 @@ Live demo: https://bdav24.github.io/crypto-indexes/index.html?from=0&to=10
 
 1. Get crypto prices from https://api.coinmarketcap.com/v2/ticker/ ordered by rank.
 2. Filter prices from `from` to `to` parameters.
-3. Create the index, which os the sum of `ALTBTC / "its price in BTC"`.
-4. Use the index in https://www.tradingview.com for example.
+3. Create the index, which is the sum of all `ALTBTC / "ALT price in BTC"`.
+4. Use the index in https://www.tradingview.com/chart for example.
